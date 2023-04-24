@@ -64,7 +64,7 @@ class Ava(torch.utils.data.Dataset):
             self._image_paths,
             self._video_idx_to_name,
         ) = ava_helper.load_image_lists(cfg, is_train=(self._split == "train"))
-
+        
         # Loading annotations for boxes and labels.
         # boxes_and_labels: {'<video_name>': {<frame_num>: a list of [box_i, box_i_labels]} }
         boxes_and_labels = ava_helper.load_boxes_and_labels(
@@ -78,7 +78,12 @@ class Ava(torch.utils.data.Dataset):
             boxes_and_labels[self._video_idx_to_name[i]]
             for i in range(len(self._image_paths))
         ]
-
+        bal = {}
+        for i in boxes_and_labels[0].items():
+            if i[1]:
+                bal[i[0]] = i[1]
+        boxes_and_labels[0] = bal
+        
         # Get indices of keyframes and corresponding boxes and labels.
         # _keyframe_indices: [video_idx, sec_idx, sec, frame_index]
         # _keyframe_boxes_and_labels: list[list[list]], outer is video_idx, middle is sec_idx,
@@ -87,6 +92,8 @@ class Ava(torch.utils.data.Dataset):
             self._keyframe_indices,
             self._keyframe_boxes_and_labels,
         ) = ava_helper.get_keyframe_data(boxes_and_labels)
+        # print(ava_helper.get_keyframe_data(boxes_and_labels)[0])
+        # print(ava_helper.get_keyframe_data(boxes_and_labels)[1])
 
         # Calculate the number of used boxes.
         self._num_boxes_used = ava_helper.get_num_boxes_used(
@@ -308,6 +315,7 @@ class Ava(torch.utils.data.Dataset):
         assert len(clip_label_list) > 0
         assert len(clip_label_list) <= self._max_objs
         num_objs = len(clip_label_list)
+        # print(video_idx, frame_idx - 1)
         keyframe_info = self._image_paths[video_idx][frame_idx - 1]
         src_height, src_width = imgs[0].shape[0], imgs[0].shape[1]
 

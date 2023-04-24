@@ -9,6 +9,7 @@ from datasets.ava_eval_helper import read_exclusions
 
 logger = logging.getLogger(__name__)
 FPS = 30
+# SSK_VALID_FRAMES = range(902-901, 1799-901)
 AVA_VALID_FRAMES = range(902, 1799)
 
 
@@ -119,7 +120,7 @@ def load_boxes_and_labels(cfg, mode):
                 continue
 
             # Only select frame_sec % 4 = 0 samples for validation if not
-            # set FULL_TEST_ON_VAL (default False)
+            # set FULL_TEST_ON_VAL (default Fals
             if mode == 'val' and not cfg.AVA.FULL_TEST_ON_VAL and frame_sec % 4 != 0:
                 continue
             # Box with [x1, y1, x2, y2] with a range of [0, 1] as float
@@ -174,6 +175,8 @@ def get_keyframe_data(boxes_and_labels):
         0: 900
         30: 901
         """
+        # '''for ssuk'''
+        # return sec * FPS 
         return (sec - 900) * FPS
 
     keyframe_indices = []
@@ -219,7 +222,7 @@ def get_num_boxes_used(keyframe_indices, keyframe_boxes_and_labels):
     return count
 
 
-def get_max_objs(keyframe_indices, keyframe_boxes_and_labels):
+def get_keyframe_data_max_objs(keyframe_indices, keyframe_boxes_and_labels):
     # max_objs = 0
     # for video_idx, sec_idx, _, _ in keyframe_indices:
     #     num_boxes = len(keyframe_boxes_and_labels[video_idx][sec_idx])

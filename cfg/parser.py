@@ -40,6 +40,12 @@ def parse_args():
         type=str,
     )
     parser.add_argument(
+    "--demo",
+    help="Path to the demo video file",
+    default='/home/test/data/ava/videos_15min/_ithRWANKB0.mp4',
+    type=str,
+    )
+    parser.add_argument(
         "opts",
         help="See slowfast/config/defaults.py for all options",
         default=None,

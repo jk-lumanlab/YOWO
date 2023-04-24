@@ -368,7 +368,7 @@ def get_region_boxes_ava(output, conf_thresh, num_classes, anchors, num_anchors,
 
     det_confs = torch.sigmoid(output[4])
 
-    pose_cls_confs = torch.nn.Softmax()(Variable(output[5:5+14].transpose(0,1))).data  ############## MODIFICATION
+    pose_cls_confs = torch.nn.Softmax(dim=-1)(Variable(output[5:5+14].transpose(0,1))).data  ############## jkjang fix
     act_cls_confs = torch.sigmoid(Variable(output[5+14:5+num_classes].transpose(0,1))).data  ############## MODIFICATION
     cls_confs = torch.cat([pose_cls_confs, act_cls_confs], dim=1)
     t1 = time.time()

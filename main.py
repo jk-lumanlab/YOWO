@@ -24,7 +24,9 @@ from core.model import YOWO, get_fine_tuning_parameters
 ####### Load configuration arguments
 # ---------------------------------------------------------------
 args  = parser.parse_args()
+print(args)
 cfg   = parser.load_config(args)
+# print(cfg)
 
 
 ####### Check backup directory, create if necessary

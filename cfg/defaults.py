@@ -569,14 +569,14 @@ _C.AVA = CfgNode()
 
 # Directory path of frames.
 # _C.AVA.FRAME_DIR = "/mnt/fair-flash3-east/ava_trainval_frames.img/"
-_C.AVA.FRAME_DIR = "/usr/home/sut/datasets/AVA/frames/"
+_C.AVA.FRAME_DIR = "datasets/AVA/frames/"
 
 # Directory path for files of frame lists.
 # _C.AVA.FRAME_LIST_DIR = (
 #     "/mnt/vol/gfsai-flash3-east/ai-group/users/haoqifan/ava/frame_list/"
 # )
 _C.AVA.FRAME_LIST_DIR = (
-    "/usr/home/sut/datasets/AVA/frame_lists/"
+    "datasets/AVA/frame_lists/"
 )
 
 # Directory path for annotation files.
@@ -584,12 +584,13 @@ _C.AVA.FRAME_LIST_DIR = (
 #     "/mnt/vol/gfsai-flash3-east/ai-group/users/haoqifan/ava/frame_list/"
 # )
 _C.AVA.ANNOTATION_DIR = (
-    "/usr/home/sut/datasets/AVA/annotations/"
+    "datasets/AVA/annotations/"
 )
 
 # Filenames of training samples list files.
 _C.AVA.TRAIN_LISTS = ["train.csv"]
-
+ 
+    
 # Filenames of test samples list files.
 _C.AVA.TEST_LISTS = ["val.csv"]
 
@@ -652,10 +653,10 @@ _C.AVA.IMG_PROC_BACKEND = "cv2"
 # list Dataset options
 # -----------------------------------------------------------------------------
 _C.LISTDATA = CfgNode()
-_C.LISTDATA.BASE_PTH = "/usr/home/sut/datasets/ucf24"
-_C.LISTDATA.TRAIN_FILE = "/usr/home/sut/datasets/ucf24/trainlist.txt"
-_C.LISTDATA.TEST_FILE = "/usr/home/sut/datasets/ucf24/testlist.txt"
-_C.LISTDATA.TEST_VIDEO_FILE = "/usr/home/sut/datasets/ucf24/testlist_video.txt"
+_C.LISTDATA.BASE_PTH = "datasets/ucf24"
+_C.LISTDATA.TRAIN_FILE = "datasets/ucf24/trainlist.txt"
+_C.LISTDATA.TEST_FILE = "datasets/ucf24/testlist.txt"
+_C.LISTDATA.TEST_VIDEO_FILE = "datasets/ucf24/testlist_video.txt"
 _C.LISTDATA.MAX_OBJS = 6
 _C.LISTDATA.CLASS_NAMES = [
     "Basketball", "BasketballDunk", "Biking", "CliffDiving", "CricketBowling", 
