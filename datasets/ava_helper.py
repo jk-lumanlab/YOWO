@@ -9,8 +9,7 @@ from datasets.ava_eval_helper import read_exclusions
 
 logger = logging.getLogger(__name__)
 FPS = 30
-# SSK_VALID_FRAMES = range(902-901, 1799-901)
-AVA_VALID_FRAMES = range(902, 1799)
+AVA_VALID_FRAMES = range(902, 1799) # AVA
 
 
 def load_image_lists(cfg, is_train):
@@ -60,6 +59,7 @@ def load_image_lists(cfg, is_train):
                 )
 
     image_paths = [image_paths[i] for i in range(len(image_paths))]
+    # print(image_paths)
 
     logger.info(
         "Finished loading image paths from: %s" % ", ".join(list_filenames)
@@ -82,11 +82,19 @@ def load_boxes_and_labels(cfg, mode):
             coordinates of box and 'box_labels` are the corresponding
             labels for the box.
     """
+    if 'Luman' in cfg.AVA.FRAME_DIR:
+        AVA_VALID_FRAMES = range(300) # luman_jk
+    else:
+        AVA_VALID_FRAMES = range(902, 1799) # AVA
+    # print(AVA_VALID_FRAMES)
+
     if cfg.TRAIN.USE_SLOWFAST:
         gt_filename = cfg.AVA.TRAIN_GT_BOX_LISTS if mode == 'train' else cfg.AVA.TEST_PREDICT_BOX_LISTS
     else:
         gt_filename = cfg.AVA.TRAIN_GT_BOX_LISTS if mode == 'train' else cfg.AVA.VAL_GT_BOX_LISTS
     ann_filename = os.path.join(cfg.AVA.ANNOTATION_DIR, gt_filename[0])
+    # print(gt_filename)
+    # print(ann_filename)
     all_boxes = {}
     count = 0
     unique_box_count = 0
@@ -151,11 +159,11 @@ def load_boxes_and_labels(cfg, mode):
     )
     logger.info("Number of unique boxes: %d" % unique_box_count)
     logger.info("Number of annotations: %d" % count)
-
+    # print(all_boxes)
     return all_boxes
 
 
-def get_keyframe_data(boxes_and_labels):
+def get_keyframe_data(boxes_and_labels,cfg):
     """
     Getting keyframe indices, boxes and labels in the dataset.
 
@@ -175,10 +183,16 @@ def get_keyframe_data(boxes_and_labels):
         0: 900
         30: 901
         """
-        # '''for ssuk'''
-        # return sec * FPS 
-        return (sec - 900) * FPS
-
+        '''for ssuk'''
+        if AVA_VALID_FRAMES == range(300): # if Luman data
+            return sec * FPS
+        else:
+            return (sec - 900) * FPS # ordinary AVA
+    
+    if 'Luman' in cfg.AVA.FRAME_DIR:
+        AVA_VALID_FRAMES = range(0,300) # if Luman data
+    else:
+        AVA_VALID_FRAMES = range(902, 1799) # ordinary AVA
     keyframe_indices = []
     keyframe_boxes_and_labels = []
     count = 0
@@ -187,19 +201,22 @@ def get_keyframe_data(boxes_and_labels):
         keyframe_boxes_and_labels.append([])
         for sec in boxes_and_labels[video_idx].keys():
             if sec not in AVA_VALID_FRAMES:
+                print(sec)
                 continue
 
             if len(boxes_and_labels[video_idx][sec]) > 0:
                 keyframe_indices.append(
                     (video_idx, sec_idx, sec, sec_to_frame(sec))
                 )
+                # print((video_idx, sec_idx, sec, sec_to_frame(sec)))
                 keyframe_boxes_and_labels[video_idx].append(
                     boxes_and_labels[video_idx][sec]
                 )
                 sec_idx += 1
                 count += 1
     logger.info("%d keyframes used." % count)
-
+    # print(len(keyframe_indices))
+    # print(keyframe_boxes_and_labels)
     return keyframe_indices, keyframe_boxes_and_labels
 
 
@@ -230,4 +247,4 @@ def get_keyframe_data_max_objs(keyframe_indices, keyframe_boxes_and_labels):
     #         max_objs = num_boxes
 
     # return max_objs
-    return 50 #### MODIFICATION FOR NOW! TODO: FIX LATER!
+    return 10 #### MODIFICATION FOR NOW! TODO: FIX LATER!

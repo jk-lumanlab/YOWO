@@ -71,10 +71,12 @@ def test_ava(cfg, epoch, model, test_loader):
     conf_thresh_valid = 0.005
 
     nbatch = len(test_loader)
+    # print(test_loader)
     meter = AVAMeter(cfg, cfg.TRAIN.MODE, 'latest_detection.json')
 
     model.eval()
     for batch_idx, batch in enumerate(test_loader):
+        # print(batch_idx, batch['metadata'], __name__) # luman_jk
         data = batch['clip'].cuda()
         target = {'cls': batch['cls'], 'boxes': batch['boxes']}
 
@@ -98,7 +100,7 @@ def test_ava(cfg, epoch, model, test_loader):
                     preds.append([[x1,y1,x2,y2], cls_out, metadata[i][:2].tolist()])
 
         meter.update_stats(preds)
-        logging("[%d/%d]" % (batch_idx, nbatch))
+        logging("[%d/%d]" % (batch_idx+1, nbatch))
 
     mAP = meter.evaluate_ava()
     logging("mode: {} -- mAP: {}".format(meter.mode, mAP))

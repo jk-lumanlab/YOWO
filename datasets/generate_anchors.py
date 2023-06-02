@@ -94,7 +94,7 @@ def kmeans(X,centroids,eps,anchor_file):
             return
 
         #calculate new centroids
-        centroid_sums=np.zeros((k,dim),np.float)
+        centroid_sums=np.zeros((k,dim),np.float64) # luman_jk modify np.float -> np.float64
         for i in range(N):
             centroid_sums[assignments[i]]+=X[i]        
         for j in range(k):            

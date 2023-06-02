@@ -249,6 +249,7 @@ class PerImageEvaluation(object):
       num_boxes: Number of non-maximum suppressed detected boxes.
     """
         detected_boxlist = np_box_list.BoxList(detected_boxes)
+        # print(detected_boxlist) # luman_jk
         detected_boxlist.add_field("scores", detected_scores)
         gt_non_group_of_boxlist = np_box_list.BoxList(
             groundtruth_boxes[~groundtruth_is_group_of_list]

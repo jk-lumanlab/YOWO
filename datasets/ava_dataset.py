@@ -14,6 +14,7 @@ from datasets import ava_helper, cv2_transform
 from datasets.dataset_utils import retry_load_images, get_frame_idx, get_sequence
 from datasets import image
 
+logging.basicConfig(level=logging.INFO) ## jk_added
 logger = logging.getLogger(__name__)
 
 
@@ -40,14 +41,14 @@ class Ava(torch.utils.data.Dataset):
         if self._split == "train":
             self._crop_size = cfg.DATA.TRAIN_CROP_SIZE
             self._jitter_min_scale = cfg.DATA.TRAIN_JITTER_SCALES[0]
-            self._jitter_max_scale = cfg.DATA.TRAIN_JITTER_SCALES[1]
-            self._use_color_augmentation = cfg.AVA.TRAIN_USE_COLOR_AUGMENTATION
-            self._pca_jitter_only = cfg.AVA.TRAIN_PCA_JITTER_ONLY
-            self._pca_eigval = cfg.AVA.TRAIN_PCA_EIGVAL
-            self._pca_eigvec = cfg.AVA.TRAIN_PCA_EIGVEC
+            self._jitter_max_scale = cfg.DATA.TRAIN_JITTER_SCALES[1] #
+            self._use_color_augmentation = cfg.AVA.TRAIN_USE_COLOR_AUGMENTATION #
+            self._pca_jitter_only = cfg.AVA.TRAIN_PCA_JITTER_ONLY #
+            self._pca_eigval = cfg.AVA.TRAIN_PCA_EIGVAL #
+            self._pca_eigvec = cfg.AVA.TRAIN_PCA_EIGVEC #
         else:
             self._crop_size = cfg.DATA.TEST_CROP_SIZE
-            self._test_force_flip = cfg.AVA.TEST_FORCE_FLIP
+            self._test_force_flip = cfg.AVA.TEST_FORCE_FLIP #
             self._jitter_min_scale = cfg.DATA.TRAIN_JITTER_SCALES[0]
 
         self._load_data(cfg)
@@ -64,13 +65,14 @@ class Ava(torch.utils.data.Dataset):
             self._image_paths,
             self._video_idx_to_name,
         ) = ava_helper.load_image_lists(cfg, is_train=(self._split == "train"))
-        
         # Loading annotations for boxes and labels.
         # boxes_and_labels: {'<video_name>': {<frame_num>: a list of [box_i, box_i_labels]} }
         boxes_and_labels = ava_helper.load_boxes_and_labels(
             cfg, mode=self._split
-        )
-
+        ) 
+        self._boxes_and_labels = boxes_and_labels
+        # print(boxes_and_labels)
+        # print(self._image_paths)
         assert len(boxes_and_labels) == len(self._image_paths)
 
         # boxes_and_labels: a list of {<frame_num>: a list of [box_i, box_i_labels]}
@@ -78,12 +80,25 @@ class Ava(torch.utils.data.Dataset):
             boxes_and_labels[self._video_idx_to_name[i]]
             for i in range(len(self._image_paths))
         ]
+        # print(boxes_and_labels)
+
+        #### jk_modified
+        # for j in range(len(boxed_and_labels)):
+        #     bal = {}
+        #     for i in boxes_and_labels[j].items():
+        #         if i[1]:
+        #             bal[i[0]] = i[1]
+        #     boxes_and_labels[j] = bal        
+        # #### original
         bal = {}
         for i in boxes_and_labels[0].items():
             if i[1]:
                 bal[i[0]] = i[1]
         boxes_and_labels[0] = bal
-        
+        # ####
+
+        # print(len(boxes_and_labels))
+        # print(boxes_and_labels[0])        
         # Get indices of keyframes and corresponding boxes and labels.
         # _keyframe_indices: [video_idx, sec_idx, sec, frame_index]
         # _keyframe_boxes_and_labels: list[list[list]], outer is video_idx, middle is sec_idx,
@@ -91,16 +106,14 @@ class Ava(torch.utils.data.Dataset):
         (
             self._keyframe_indices,
             self._keyframe_boxes_and_labels,
-        ) = ava_helper.get_keyframe_data(boxes_and_labels)
-        # print(ava_helper.get_keyframe_data(boxes_and_labels)[0])
-        # print(ava_helper.get_keyframe_data(boxes_and_labels)[1])
+        ) = ava_helper.get_keyframe_data(boxes_and_labels, cfg)
 
         # Calculate the number of used boxes.
         self._num_boxes_used = ava_helper.get_num_boxes_used(
             self._keyframe_indices, self._keyframe_boxes_and_labels
         )
 
-        self._max_objs = ava_helper.get_max_objs(
+        self._max_objs = ava_helper.get_keyframe_data_max_objs(
             self._keyframe_indices, self._keyframe_boxes_and_labels
         )
         self.print_summary()
@@ -114,7 +127,8 @@ class Ava(torch.utils.data.Dataset):
         )
         logger.info("Number of frames: {}".format(total_frames))
         logger.info("Number of key frames: {}".format(len(self)))
-        logger.info("Number of boxes: {}.".format(self._num_boxes_used))
+        ### Luman_jk
+        # logger.info("Number of boxes: {}.".format(self._nums_boxes_used))
 
     def __len__(self):
         return len(self._keyframe_indices)
@@ -298,11 +312,14 @@ class Ava(torch.utils.data.Dataset):
         """
         # Get the frame idxs for current clip. We can use it as center or latest
         video_idx, sec_idx, sec, frame_idx = self._keyframe_indices[idx]
+        # print(video_idx, sec_idx, sec, frame_idx)
         clip_label_list = self._keyframe_boxes_and_labels[video_idx][sec_idx]
+        # print(clip_label_list)
 
         assert self.cfg.AVA.IMG_PROC_BACKEND != 'pytorch'
         sample_rate = self._sample_rate
         seq_len = self._video_length * sample_rate
+        # print(sample_rate, seq_len)
         seq = get_sequence(
             frame_idx,
             seq_len // 2,
@@ -310,12 +327,15 @@ class Ava(torch.utils.data.Dataset):
             num_frames=len(self._image_paths[video_idx]),
         )
         image_paths = [self._image_paths[video_idx][frame - 1] for frame in seq]
+        # image_paths = list(map(lambda x:
+        #                        '__'.join(['_'.join(x.split('_')[:-1]), x.split('_')[-1]]), image_paths))
         imgs = retry_load_images(image_paths, backend=self.cfg.AVA.IMG_PROC_BACKEND)
 
         assert len(clip_label_list) > 0
         assert len(clip_label_list) <= self._max_objs
         num_objs = len(clip_label_list)
         # print(video_idx, frame_idx - 1)
+        # print(self._image_paths)
         keyframe_info = self._image_paths[video_idx][frame_idx - 1]
         src_height, src_width = imgs[0].shape[0], imgs[0].shape[1]
 

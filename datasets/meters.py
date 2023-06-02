@@ -68,7 +68,7 @@ class AVAMeter(object):
 
     def evaluate_ava(self):
         eval_start = time.time()
-        detections = self.get_ava_eval_data()
+        detections = self.get_ava_eval_data() # <- 현위치
         if self.mode == 'test' or (self.full_ava_test and self.mode == "val"):
             groundtruth = self.full_groundtruth
         else:
@@ -79,6 +79,7 @@ class AVAMeter(object):
         name = "latest"
         write_results(detections, os.path.join(self.cfg.BACKUP_DIR, "detections_%s.csv" % name))
         write_results(groundtruth, os.path.join(self.cfg.BACKUP_DIR, "groundtruth_%s.csv" % name))
+        # print(groundtruth, detections)
         results = run_evaluation(self.categories, groundtruth, detections, self.excluded_keys)
         with open(self.output_json, 'w') as fp:
             json.dump(results, fp)
@@ -97,6 +98,7 @@ class AVAMeter(object):
         # each pred is [[x1, y1, x2, y2], [scores], [video_idx, src]]
         for i in range(len(self.all_preds)):
             pred = self.all_preds[i]
+            # print(pred[2], __name__) # luman_jk
             assert len(pred) == 3
             video_idx = int(np.round(pred[-1][0]))
             sec = int(np.round(pred[-1][1]))

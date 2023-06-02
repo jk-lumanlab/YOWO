@@ -55,6 +55,7 @@ class BoxList(object):
                 "Invalid data type for box data: float is required."
             )
         if not self._is_valid_boxes(data):
+            print(data)
             raise ValueError(
                 "Invalid box data. data must be a numpy array of "
                 "N*[y_min, x_min, y_max, x_max]"
@@ -136,8 +137,10 @@ class BoxList(object):
       a boolean indicating whether all ymax of boxes are equal or greater than
           ymin, and all xmax of boxes are equal or greater than xmin.
     """
+        # print("count") # luman_jk
         if data.shape[0] > 0:
             for i in range(data.shape[0]):
                 if data[i, 0] > data[i, 2] or data[i, 1] > data[i, 3]:
+                    # print(i)
                     return False
         return True

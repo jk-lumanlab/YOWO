@@ -1,4 +1,7 @@
 from __future__ import print_function
+## 디버깅
+import ipdb
+
 import os
 import sys
 import time
@@ -24,10 +27,12 @@ from core.model import YOWO, get_fine_tuning_parameters
 ####### Load configuration arguments
 # ---------------------------------------------------------------
 args  = parser.parse_args()
-print(args)
+# print(args)
 cfg   = parser.load_config(args)
 # print(cfg)
 
+np.float = np.float64 # added by luman_jk 
+np.int = np.int64     # added by luman_jk
 
 ####### Check backup directory, create if necessary
 # ---------------------------------------------------------------
@@ -89,12 +94,15 @@ assert dataset == 'ucf24' or dataset == 'jhmdb21' or dataset == 'ava', 'invalid 
 if dataset == 'ava':
     train_dataset = Ava(cfg, split='train', only_detection=False)
     test_dataset  = Ava(cfg, split='val', only_detection=False)
+    # print(len(train_dataset)) # luman_jk
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, 
-                                               num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=True, pin_memory=True)
-    
-    test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False,
-                                               num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
+                                               shuffle=True, num_workers=cfg.DATA_LOADER.NUM_WORKERS,
+                                               drop_last=True, pin_memory=True)
+
+    test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
+                                               shuffle=False, num_workers=cfg.DATA_LOADER.NUM_WORKERS,
+                                               drop_last=False, pin_memory=True)
 
     loss_module   = RegionLoss_Ava(cfg).cuda()
 
@@ -102,33 +110,40 @@ if dataset == 'ava':
     test  = getattr(sys.modules[__name__], 'test_ava')
 
 
+### jk_luman ###
+# elif dataset in ['ucf24', 'jhmdb21']:
+#     train_dataset = list_dataset.UCF_JHMDB_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TRAIN_FILE, dataset=dataset,
+#                        shape=(cfg.DATA.TRAIN_CROP_SIZE, cfg.DATA.TRAIN_CROP_SIZE),
+#                        transform=transforms.Compose([transforms.ToTensor()]), 
+#                        train=True, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=cfg.DATA.SAMPLING_RATE)
+#     test_dataset  = list_dataset.UCF_JHMDB_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TEST_FILE, dataset=dataset,
+#                        shape=(cfg.DATA.TRAIN_CROP_SIZE, cfg.DATA.TRAIN_CROP_SIZE),
+#                        transform=transforms.Compose([transforms.ToTensor()]), 
+#                        train=False, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=cfg.DATA.SAMPLING_RATE)
 
-elif dataset in ['ucf24', 'jhmdb21']:
-    train_dataset = list_dataset.UCF_JHMDB_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TRAIN_FILE, dataset=dataset,
-                       shape=(cfg.DATA.TRAIN_CROP_SIZE, cfg.DATA.TRAIN_CROP_SIZE),
-                       transform=transforms.Compose([transforms.ToTensor()]), 
-                       train=True, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=cfg.DATA.SAMPLING_RATE)
-    test_dataset  = list_dataset.UCF_JHMDB_Dataset(cfg.LISTDATA.BASE_PTH, cfg.LISTDATA.TEST_FILE, dataset=dataset,
-                       shape=(cfg.DATA.TRAIN_CROP_SIZE, cfg.DATA.TRAIN_CROP_SIZE),
-                       transform=transforms.Compose([transforms.ToTensor()]), 
-                       train=False, clip_duration=cfg.DATA.NUM_FRAMES, sampling_rate=cfg.DATA.SAMPLING_RATE)
+#     train_loader  = torch.utils.data.DataLoader(train_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=True,
+#                                                num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=True, pin_memory=True)
+#     test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=False,
+#                                                num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
 
-    train_loader  = torch.utils.data.DataLoader(train_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=True,
-                                               num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=True, pin_memory=True)
-    test_loader   = torch.utils.data.DataLoader(test_dataset, batch_size= cfg.TRAIN.BATCH_SIZE, shuffle=False,
-                                               num_workers=cfg.DATA_LOADER.NUM_WORKERS, drop_last=False, pin_memory=True)
+#     loss_module   = RegionLoss(cfg).cuda()
 
-    loss_module   = RegionLoss(cfg).cuda()
-
-    train = getattr(sys.modules[__name__], 'train_ucf24_jhmdb21')
-    test  = getattr(sys.modules[__name__], 'test_ucf24_jhmdb21')
+#     train = getattr(sys.modules[__name__], 'train_ucf24_jhmdb21')
+#     test  = getattr(sys.modules[__name__], 'test_ucf24_jhmdb21')
+### jk_luman ###
 
 
-####### Training and Testing Schedule
+# ####### Training and Testing Schedule
 # ---------------------------------------------------------------
 if cfg.TRAIN.EVALUATE:
     logging('evaluating ...')
     test(cfg, 0, model, test_loader)
+    # cfg = ssk_prac
+    # epoch = 0
+    # model = YOWO
+    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=cfg.TRAIN.BATCH_SIZE,
+    #                                           shuffle=False, num_workers=cfg.DATA_LOADER.NUM_WORKERS,
+    #                                           drop_last=False, pin_memory=True)
 else:
     for epoch in range(cfg.TRAIN.BEGIN_EPOCH, cfg.TRAIN.END_EPOCH + 1):
         # Adjust learning rate
